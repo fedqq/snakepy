@@ -12,14 +12,14 @@ score = 0
 best = 0
 dead = False
 paused = False
-
-endMenuImg = 0
-restartImg = 0
+direction = 'down'
+end_image = 0
+restart_image = 0
 button = 0
-snakeEnd = 0
-endImg = 0
-snakeStart = 0
-startImg = 0
+snake_end = 0
+end_image = 0
+snake_start = 0
+start_image = 0
 
 class Snake:
     def __init__(self):
@@ -37,31 +37,33 @@ class Snake:
 
 class Food:
     def __init__(self):
-        inCoords = True
-        while inCoords:
+        on_snake = True
+        while on_snake:
             x = random.randint(0, (GAME_WIDTH/SPACE_SIZE) - 2) * SPACE_SIZE
             y = random.randint(0, (GAME_HEIGHT/SPACE_SIZE) - 2) * SPACE_SIZE
             if [x, y] not in snake.coordinates:
-                inCoords = False
+                on_snake = False
         self.coordinates = (x, y)
+
         self.img = (Image.open("apple.png"))
         self.resized = self.img.resize((SPACE_SIZE, SPACE_SIZE), Image.ANTIALIAS)
         self.new_img = ImageTk.PhotoImage(self.resized)
-
         canvas.create_image(x,y, anchor=NW, image=self.new_img, tag = "food")
-        
-        #canvas.create_oval(x, y, x + SPACE_SIZE, y + SPACE_SIZE, fill = "#ff2626", tag = "food")
         canvas.pack()
-    pass
 
-def nextTurn(snake, food):
-    if dead:
-        return
-    if paused:
-        window.after(DELAY, nextTurn, snake, food)
+def next_turn(snake, food):
+    global score
+    global start_image
+    global snake_start
+    global snake_end
+    global end_image
+
+    if dead or paused:
+        if paused:
+            window.after(DELAY, next_turn, snake, food)
         return
 
-    (startOldX, startOldY) = snake.coordinates[0]
+    old_start = snake.coordinates[0]
     x, y = snake.coordinates[0]
     if direction == 'down':
         y += SPACE_SIZE
@@ -72,30 +74,26 @@ def nextTurn(snake, food):
     else:
         x += SPACE_SIZE
     
-    CheckCollisions(x, y)
+    check_collisions(x, y)
     snake.coordinates.insert(0, (x, y))
 
-
-    startFileName = ""
-    if startOldX > x:
-        startFileName = "startLeft.png"
-    elif startOldX < x:
-        startFileName = "startRight.png"
-    elif startOldY < y:
-        startFileName = "startDown.png"
+    start_file_name = ""
+    if old_start[0] > x:
+        start_file_name = "startLeft.png"
+    elif old_start[0] < x:
+        start_file_name = "startRight.png"
+    elif old_start[1] < y:
+        start_file_name = "startDown.png"
     else:
-        startFileName = "startUp.png"
+        start_file_name = "startUp.png"
 
-    global startImg
-    global snakeStart
-    startImg = PhotoImage(file = startFileName)
-    snakeStart = canvas.create_image(x, y, anchor = NW, image = startImg)
+    start_image = PhotoImage(file = start_file_name)
+    snake_start = canvas.create_image(x, y, anchor = NW, image = start_image)
 
-    snake.squares[0] = canvas.create_rectangle(startOldX, startOldY, startOldX + SPACE_SIZE, startOldY + SPACE_SIZE, fill = "#34a8eb", outline = "#33a6e8")
-    snake.squares.insert(0, snakeStart)
+    snake.squares[0] = canvas.create_rectangle(old_start[0], old_start[1], old_start[0] + SPACE_SIZE, old_start[1] + SPACE_SIZE, fill = "#34a8eb", outline = "#33a6e8")
+    snake.squares.insert(0, snake_start)
 
     if food.coordinates[0] == x and food.coordinates[1] == y:
-        global score
         score += 1
         label["text"] = "Score: {}".format(score)
         
@@ -106,32 +104,28 @@ def nextTurn(snake, food):
         canvas.delete(snake.squares[-1])
         canvas.delete(snake.squares[-2])
         del snake.squares[-1]
-        (oldX, oldY) = snake.coordinates[-1]
-        global snakeEnd
-        global endImg
+        old_end = snake.coordinates[-1]
         fileName = ""
-        (nextX, nextY) = snake.coordinates[-2]
-        if nextX > oldX:
+        next_coords = snake.coordinates[-2]
+
+        if next_coords[0] > old_end[0]:
             fileName = "endLeft.png"
-        elif nextX < oldX:
+        elif next_coords[0] < old_end[0]:
             fileName = "endRight.png"
-        elif nextY < oldY:
+        elif next_coords[1] < old_end[1]:
             fileName = "endDown.png"
         else:
             fileName = "endUp.png"
 
-        endImg = PhotoImage(file = fileName)
-        snakeEnd = canvas.create_image(oldX, oldY, anchor = NW, image = endImg, tag = "end")
-        snake.squares[-1] = snakeEnd
+        end_image = PhotoImage(file = fileName)
+        snake_end = canvas.create_image(old_end[0], old_end[1], anchor = NW, image = end_image, tag = "end")
+        snake.squares[-1] = snake_end
 
-    if not dead:
-        window.after(DELAY, nextTurn, snake, food)
+    window.after(DELAY, next_turn, snake, food)
 
-
-direction = 'down'
-
-def changeDirection(newdirection):
+def change_direction(newdirection):
     global direction
+
     if direction == 'left' and newdirection != 'right':
         direction = newdirection
 
@@ -144,11 +138,15 @@ def changeDirection(newdirection):
     if direction == 'down' and newdirection != 'up':
         direction = newdirection
 
-def CheckCollisions(x, y):
+def check_collisions(x, y):
     if (x, y) in snake.coordinates or x > GAME_WIDTH or x < 0 or y > GAME_HEIGHT or y < 0:
-        gameOver()
+        end()
 
-def createBG():
+def check_win():
+    if score == (GAME_WIDTH / SPACE_SIZE) * (GAME_HEIGHT / SPACE_SIZE):
+        win()
+
+def create_bg():
     fillType = 0
     for height in range(int(GAME_HEIGHT / SPACE_SIZE)):
         if fillType == 0:
@@ -165,39 +163,39 @@ def createBG():
                 canvas.create_rectangle(x, y, x + SPACE_SIZE + 10, y + SPACE_SIZE + 10, fill = "#b0d454", outline = "#b0d454")
                 fillType = 0
 
-def gameOver():
+def end():
     global direction
     global best
     global dead
     global snake
     global button
-    global restartImg
-    global endMenuImg
+    global restart_image
+    global end_image
 
     direction = 'down'
-
     dead = True
+
     if score > best:
         best = score
     snake.coordinates.clear()
-    for i in snake.squares:
-        del i
+    snake.squares.clear()
     del snake
     canvas.delete("all")
-    createBG()
+    create_bg()
 
-    endMenuImg = ImageTk.PhotoImage(file = "endMenu.png")
-    canvas.create_image(0, 0, image = endMenuImg, anchor = NW, tag = "rects")
+    end_image = ImageTk.PhotoImage(file = "endMenu.png")
+    canvas.create_image(0, 0, image = end_image, anchor = NW, tag = "rects")
 
-    restartImg = PhotoImage(file = "restartBtn.png")
-    button = Button(canvas, image = restartImg, bd = 0, padx = 0, pady = 0, borderwidth = 0, command = lambda: restartGame())
+    restart_image = PhotoImage(file = "restartBtn.png")
+    button = Button(canvas, image = restart_image, bd = 0, padx = 0, pady = 0, borderwidth = 0, command = lambda: restart())
     button.place(x = GAME_WIDTH / 2 - 137, y = 460)
     
     canvas.create_text(300, 150, text="Score: {}\nBest Score: {}".format(score, best), fill="white", font=('Helvetica 17 bold'), justify = CENTER)
     
-def pauseGame():
+def pause():
     global dead
     global paused
+
     if dead:
         return
     if paused:
@@ -207,8 +205,7 @@ def pauseGame():
         paused = True
         canvas.create_text(300, 150, text="Press Esc To Unpause", fill="white", font=('Helvetica 17 bold'), justify = CENTER, tag = "pausedText")
     
-
-def restartGame():
+def restart():
     global snake
     global score
     global food
@@ -219,19 +216,21 @@ def restartGame():
     del button
 
     canvas.delete("all")
-    createBG()
+    create_bg()
 
     snake = 0
     snake = Snake()
     score = 0
     food = Food()
     dead = False
-    nextTurn(snake, food)
 
-def winGame():
-    canvas.delete("all")
+    next_turn(snake, food)
+
+def win():
     global snake
     global food
+
+    canvas.delete("all")
     del snake
     del food
     canvas.create_text(300, 150, text="GG", fill="white", font=('Helvetica 75 bold'), justify = CENTER, tag = "winText")
@@ -247,27 +246,19 @@ label.pack()
 canvas = Canvas(window, bg = "#a8d44c", width = GAME_WIDTH, height = GAME_WIDTH, bd = 0, relief=RAISED)
 canvas.pack()
 
-createBG()
+create_bg()
 
 window.update()
-window_width = window.winfo_width()
-window_height = window.winfo_height()
-screen_width = window.winfo_screenwidth()
-screen_height = window.winfo_screenheight()
 
-x = int(screen_width/2 - window_width/2)
-y = int(screen_height/2 - window_height/2)
-
-window.bind("<Left>", lambda event: changeDirection('left'))
-window.bind("<Right>", lambda event: changeDirection('right'))
-window.bind("<Up>", lambda event: changeDirection('up'))
-window.bind("<Down>", lambda event: changeDirection('down'))
-window.bind("<Return>", lambda event: restartGame())
-window.bind("<Escape>", lambda event: pauseGame())
+window.bind("<Left>", lambda event: change_direction('left'))
+window.bind("<Right>", lambda event: change_direction('right'))
+window.bind("<Up>", lambda event: change_direction('up'))
+window.bind("<Down>", lambda event: change_direction('down'))
+window.bind("<Return>", lambda event: restart())
+window.bind("<Escape>", lambda event: pause())
 
 snake = Snake()
 food = Food()
-
-nextTurn(snake, food)
+next_turn(snake, food)
 
 window.mainloop()
