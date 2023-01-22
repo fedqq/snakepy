@@ -13,6 +13,14 @@ best = 0
 dead = False
 paused = False
 
+endMenuImg = 0
+restartImg = 0
+button = 0
+snakeEnd = 0
+endImg = 0
+snakeStart = 0
+startImg = 0
+
 class Snake:
     def __init__(self):
         self.body_size = BODY_PARTS
@@ -45,12 +53,6 @@ class Food:
         #canvas.create_oval(x, y, x + SPACE_SIZE, y + SPACE_SIZE, fill = "#ff2626", tag = "food")
         canvas.pack()
     pass
-
-global snakeEnd
-global endImg
-
-global snakeStart
-global startImg
 
 def nextTurn(snake, food):
     if dead:
@@ -163,14 +165,14 @@ def createBG():
                 canvas.create_rectangle(x, y, x + SPACE_SIZE + 10, y + SPACE_SIZE + 10, fill = "#b0d454", outline = "#b0d454")
                 fillType = 0
 
-global endMenuImg
-global restartImg
-
 def gameOver():
     global direction
     global best
     global dead
     global snake
+    global button
+    global restartImg
+    global endMenuImg
 
     direction = 'down'
 
@@ -178,19 +180,18 @@ def gameOver():
     if score > best:
         best = score
     snake.coordinates.clear()
-    snake.squares.clear()
+    for i in snake.squares:
+        del i
     del snake
     canvas.delete("all")
     createBG()
-
-    global restartImg
-    global endMenuImg
 
     endMenuImg = ImageTk.PhotoImage(file = "endMenu.png")
     canvas.create_image(0, 0, image = endMenuImg, anchor = NW, tag = "rects")
 
     restartImg = PhotoImage(file = "restartBtn.png")
-    canvas.create_image(0, 0, image = restartImg, anchor = NW, tag = "restartBtn")
+    button = Button(canvas, image = restartImg, bd = 0, padx = 0, pady = 0, borderwidth = 0, command = lambda: restartGame())
+    button.place(x = GAME_WIDTH / 2 - 137, y = 460)
     
     canvas.create_text(300, 150, text="Score: {}\nBest Score: {}".format(score, best), fill="white", font=('Helvetica 17 bold'), justify = CENTER)
     
@@ -208,13 +209,17 @@ def pauseGame():
     
 
 def restartGame():
-    canvas.delete("all")
-    createBG()
-
     global snake
     global score
     global food
     global dead
+    global button
+
+    button.destroy()
+    del button
+
+    canvas.delete("all")
+    createBG()
 
     snake = 0
     snake = Snake()
@@ -231,24 +236,6 @@ def winGame():
     del food
     canvas.create_text(300, 150, text="GG", fill="white", font=('Helvetica 75 bold'), justify = CENTER, tag = "winText")
 
-global mx
-global my
-
-def mouseClick(event):
-    global mx
-    global my
-    if dead:
-        mx = event.x
-        my = event.y
-        if mx > 167 and mx < 429 and my > 447 and my < 507: 
-            restartGame()
-
-def posGet(e):
-    global mx
-    global my
-    mx= e.x
-    my= e.y
-
 window = Tk()
 window.title("Snake")
 window.resizable(False, False)
@@ -258,7 +245,6 @@ label = Label(window, text="Score: {}".format(score), font = ("Arial", 30), bg =
 label.pack()
 
 canvas = Canvas(window, bg = "#a8d44c", width = GAME_WIDTH, height = GAME_WIDTH, bd = 0, relief=RAISED)
-
 canvas.pack()
 
 createBG()
@@ -278,10 +264,6 @@ window.bind("<Up>", lambda event: changeDirection('up'))
 window.bind("<Down>", lambda event: changeDirection('down'))
 window.bind("<Return>", lambda event: restartGame())
 window.bind("<Escape>", lambda event: pauseGame())
-
-frame = Frame(window, width=600, height=600)
-frame.bind("<Button-1>", lambda event: mouseClick(event))
-window.bind('<Motion>', lambda event: posGet(event))
 
 snake = Snake()
 food = Food()
