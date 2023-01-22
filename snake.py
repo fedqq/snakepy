@@ -21,6 +21,12 @@ end_image = 0
 snake_start = 0
 start_image = 0
 
+best_file = open("high_score.txt", 'r')
+high_score = best_file.read()
+if high_score != '':
+    best = int(high_score)
+best_file.close()
+
 class Snake:
     def __init__(self):
         self.body_size = BODY_PARTS
@@ -235,6 +241,13 @@ def win():
     del food
     canvas.create_text(300, 150, text="GG", fill="white", font=('Helvetica 75 bold'), justify = CENTER, tag = "winText")
 
+def on_close():
+    open('high_score.txt', 'w').close()
+    file = open("high_score.txt", 'w')
+    file.write(str(best))
+    file.close()
+    window.destroy()
+
 window = Tk()
 window.title("Snake")
 window.resizable(False, False)
@@ -256,6 +269,8 @@ window.bind("<Up>", lambda event: change_direction('up'))
 window.bind("<Down>", lambda event: change_direction('down'))
 window.bind("<Return>", lambda event: restart())
 window.bind("<Escape>", lambda event: pause())
+
+window.protocol("WM_DELETE_WINDOW", on_close)
 
 snake = Snake()
 food = Food()
