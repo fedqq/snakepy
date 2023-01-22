@@ -45,7 +45,7 @@ class Food:
                 on_snake = False
         self.coordinates = (x, y)
 
-        self.img = (Image.open("apple.png"))
+        self.img = (Image.open("resources/apple.png"))
         self.resized = self.img.resize((SPACE_SIZE, SPACE_SIZE), Image.ANTIALIAS)
         self.new_img = ImageTk.PhotoImage(self.resized)
         canvas.create_image(x,y, anchor=NW, image=self.new_img, tag = "food")
@@ -79,13 +79,13 @@ def next_turn(snake, food):
 
     start_file_name = ""
     if old_start[0] > x:
-        start_file_name = "startLeft.png"
+        start_file_name = "resources/startLeft.png"
     elif old_start[0] < x:
-        start_file_name = "startRight.png"
+        start_file_name = "resources/startRight.png"
     elif old_start[1] < y:
-        start_file_name = "startDown.png"
+        start_file_name = "resources/startDown.png"
     else:
-        start_file_name = "startUp.png"
+        start_file_name = "resources/startUp.png"
 
     start_image = PhotoImage(file = start_file_name)
     snake_start = canvas.create_image(x, y, anchor = NW, image = start_image)
@@ -109,13 +109,13 @@ def next_turn(snake, food):
         next_coords = snake.coordinates[-2]
 
         if next_coords[0] > old_end[0]:
-            fileName = "endLeft.png"
+            fileName = "resources/endLeft.png"
         elif next_coords[0] < old_end[0]:
-            fileName = "endRight.png"
+            fileName = "resources/endRight.png"
         elif next_coords[1] < old_end[1]:
-            fileName = "endDown.png"
+            fileName = "resources/endDown.png"
         else:
-            fileName = "endUp.png"
+            fileName = "resources/endUp.png"
 
         end_image = PhotoImage(file = fileName)
         snake_end = canvas.create_image(old_end[0], old_end[1], anchor = NW, image = end_image, tag = "end")
@@ -183,10 +183,10 @@ def end():
     canvas.delete("all")
     create_bg()
 
-    end_image = ImageTk.PhotoImage(file = "endMenu.png")
+    end_image = ImageTk.PhotoImage(file = "resources/endMenu.png")
     canvas.create_image(0, 0, image = end_image, anchor = NW, tag = "rects")
 
-    restart_image = PhotoImage(file = "restartBtn.png")
+    restart_image = PhotoImage(file = "resources/restartBtn.png")
     button = Button(canvas, image = restart_image, bd = 0, padx = 0, pady = 0, borderwidth = 0, command = lambda: restart())
     button.place(x = GAME_WIDTH / 2 - 137, y = 460)
     
