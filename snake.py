@@ -20,6 +20,7 @@ snake_end = 0
 end_image = 0
 snake_start = 0
 start_image = 0
+pause_image = 0
 
 best_file = open("high_score.txt", 'r')
 high_score = best_file.read()
@@ -85,19 +86,21 @@ def next_turn(snake, food):
 
     start_file_name = ""
     if old_start[0] > x:
-        start_file_name = "resources/startLeft.png"
+        start_file_name = "resources/start_left.png"
     elif old_start[0] < x:
-        start_file_name = "resources/startRight.png"
+        start_file_name = "resources/start_right.png"
     elif old_start[1] < y:
-        start_file_name = "resources/startDown.png"
+        start_file_name = "resources/start_down.png"
     else:
-        start_file_name = "resources/startUp.png"
+        start_file_name = "resources/start_up.png"
 
-    start_image = PhotoImage(file = start_file_name)
-    snake_start = canvas.create_image(x, y, anchor = NW, image = start_image)
+    if not dead:
+        start_image = PhotoImage(file = start_file_name)
+        snake_start = canvas.create_image(x, y, anchor = NW, image = start_image)
 
-    snake.squares[0] = canvas.create_rectangle(old_start[0], old_start[1], old_start[0] + SPACE_SIZE, old_start[1] + SPACE_SIZE, fill = "#34a8eb", outline = "#33a6e8")
-    snake.squares.insert(0, snake_start)
+    if not dead:
+        snake.squares[0] = canvas.create_rectangle(old_start[0], old_start[1], old_start[0] + SPACE_SIZE, old_start[1] + SPACE_SIZE, fill = "#34a8eb", outline = "#33a6e8")
+        snake.squares.insert(0, snake_start)
 
     if food.coordinates[0] == x and food.coordinates[1] == y:
         score += 1
@@ -115,17 +118,18 @@ def next_turn(snake, food):
         next_coords = snake.coordinates[-2]
 
         if next_coords[0] > old_end[0]:
-            fileName = "resources/endLeft.png"
+            fileName = "resources/end_left.png"
         elif next_coords[0] < old_end[0]:
-            fileName = "resources/endRight.png"
+            fileName = "resources/end_right.png"
         elif next_coords[1] < old_end[1]:
-            fileName = "resources/endDown.png"
+            fileName = "resources/end_down.png"
         else:
-            fileName = "resources/endUp.png"
+            fileName = "resources/end_up.png"
 
         end_image = PhotoImage(file = fileName)
-        snake_end = canvas.create_image(old_end[0], old_end[1], anchor = NW, image = end_image, tag = "end")
-        snake.squares[-1] = snake_end
+        if not dead:
+            snake_end = canvas.create_image(old_end[0], old_end[1], anchor = NW, image = end_image, tag = "end")
+            snake.squares[-1] = snake_end
 
     window.after(DELAY, next_turn, snake, food)
 
@@ -189,27 +193,31 @@ def end():
     canvas.delete("all")
     create_bg()
 
-    end_image = ImageTk.PhotoImage(file = "resources/endMenu.png")
+    end_image = ImageTk.PhotoImage(file = "resources/end_menu.png")
     canvas.create_image(0, 0, image = end_image, anchor = NW, tag = "rects")
 
-    restart_image = PhotoImage(file = "resources/restartBtn.png")
+    restart_image = PhotoImage(file = "resources/restart_btn.png")
     button = Button(canvas, image = restart_image, bd = 0, padx = 0, pady = 0, borderwidth = 0, command = lambda: restart())
     button.place(x = GAME_WIDTH / 2 - 137, y = 460)
     
     canvas.create_text(300, 150, text="Score: {}\nBest Score: {}".format(score, best), fill="white", font=('Helvetica 17 bold'), justify = CENTER)
     
-def pause():
+def pause(click):
     global dead
     global paused
+    global pause_image
+    pause_image = PhotoImage(file = "resources/pause_menu.png")
 
     if dead:
         return
     if paused:
         paused = False
-        canvas.delete("pausedText")
+        canvas.delete("paused_image")
     else:
+        if click:
+            return
         paused = True
-        canvas.create_text(300, 150, text="Press Esc To Unpause", fill="white", font=('Helvetica 17 bold'), justify = CENTER, tag = "pausedText")
+        canvas.create_image(0, 0, image = pause_image, anchor = NW, tag = "paused_image")
     
 def restart():
     global snake
@@ -217,6 +225,9 @@ def restart():
     global food
     global dead
     global button
+
+    if not dead:
+        return
 
     button.destroy()
     del button
@@ -268,7 +279,8 @@ window.bind("<Right>", lambda event: change_direction('right'))
 window.bind("<Up>", lambda event: change_direction('up'))
 window.bind("<Down>", lambda event: change_direction('down'))
 window.bind("<Return>", lambda event: restart())
-window.bind("<Escape>", lambda event: pause())
+window.bind("<Escape>", lambda event: pause(False))
+window.bind("<Button-1>", lambda event: pause(True))
 
 window.protocol("WM_DELETE_WINDOW", on_close)
 
